@@ -96,6 +96,8 @@ ApplyExact(width, height, *) {
     if !IsEligible(CapturedWindow, CapturedPid, CapturedClass)
         return
     rect := ResolveExactCentered(GetWorkArea(CapturedWindow), width, height)
+    if WinGetMinMax(CapturedWindow) = 1
+        WinRestore CapturedWindow
     WinMove rect.x, rect.y, rect.width, rect.height, CapturedWindow
 }
 
@@ -104,5 +106,7 @@ ApplyGrid(columns, rows, columnStart, columnEnd, rowStart, rowEnd, *) {
     if !IsEligible(CapturedWindow, CapturedPid, CapturedClass)
         return
     rect := ResolveGrid(GetWorkArea(CapturedWindow), columns, rows, columnStart, columnEnd, rowStart, rowEnd)
+    if WinGetMinMax(CapturedWindow) = 1
+        WinRestore CapturedWindow
     WinMove rect.x, rect.y, rect.width, rect.height, CapturedWindow
 }
