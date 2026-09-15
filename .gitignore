@@ -1,0 +1,16 @@
+# User-specific configuration and package outputs
+user-config/
+dist/
+*.exe
+
+# Local editor and operating-system state
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+
+# Credentials must never be versioned
+.env
+.env.*
+*.key
+*.pfx
