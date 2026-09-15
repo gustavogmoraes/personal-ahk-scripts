@@ -21,5 +21,11 @@ Run geometry tests with:
 & "$env:LOCALAPPDATA\Programs\AutoHotkey\v2\AutoHotkey64.exe" /ErrorStdOut .\tests\LayoutGeometry.Tests.ahk
 ```
 
+Create a source package with:
+
+```powershell
+.\Package-Source.ps1
+```
+
 This repository is under active construction; the currently tracked source is
 the authoritative implementation and test foundation.
