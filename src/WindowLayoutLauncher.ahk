@@ -67,7 +67,7 @@ OpenLayoutMenu(*) {
 }
 
 IsEligible(hwnd, expectedPid := 0, expectedClass := "") {
-    if !hwnd || !DllCall("IsWindow", "ptr", hwnd, "int") || !WinGetStyle(hwnd) & 0x10000000
+    if !hwnd || !DllCall("IsWindow", "ptr", hwnd, "int") || (WinGetStyle(hwnd) & 0x10000000) = 0
         return false
     class := WinGetClass(hwnd)
     if expectedPid && (WinGetPID(hwnd) != expectedPid || class != expectedClass)
