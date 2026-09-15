@@ -15,6 +15,12 @@
     { "id": "column-1", "label": "Column 1 of 4", "group": "Four columns", "kind": "grid", "columns": 4, "rows": 1, "columnStart": 0, "columnEnd": 1, "rowStart": 0, "rowEnd": 1 },
     { "id": "column-2", "label": "Column 2 of 4", "group": "Four columns", "kind": "grid", "columns": 4, "rows": 1, "columnStart": 1, "columnEnd": 2, "rowStart": 0, "rowEnd": 1 },
     { "id": "column-3", "label": "Column 3 of 4", "group": "Four columns", "kind": "grid", "columns": 4, "rows": 1, "columnStart": 2, "columnEnd": 3, "rowStart": 0, "rowEnd": 1 },
-    { "id": "column-4", "label": "Column 4 of 4", "group": "Four columns", "kind": "grid", "columns": 4, "rows": 1, "columnStart": 3, "columnEnd": 4, "rowStart": 0, "rowEnd": 1 }
+    { "id": "column-4", "label": "Column 4 of 4", "group": "Four columns", "kind": "grid", "columns": 4, "rows": 1, "columnStart": 3, "columnEnd": 4, "rowStart": 0, "rowEnd": 1 },
+    { "id": "half-top", "label": "Top half", "group": "Halves", "kind": "grid", "columns": 1, "rows": 2, "columnStart": 0, "columnEnd": 1, "rowStart": 0, "rowEnd": 1 },
+    { "id": "half-bottom", "label": "Bottom half", "group": "Halves", "kind": "grid", "columns": 1, "rows": 2, "columnStart": 0, "columnEnd": 1, "rowStart": 1, "rowEnd": 2 },
+    { "id": "quadrant-top-left", "label": "Top left", "group": "Quadrants", "kind": "grid", "columns": 2, "rows": 2, "columnStart": 0, "columnEnd": 1, "rowStart": 0, "rowEnd": 1 },
+    { "id": "quadrant-top-right", "label": "Top right", "group": "Quadrants", "kind": "grid", "columns": 2, "rows": 2, "columnStart": 1, "columnEnd": 2, "rowStart": 0, "rowEnd": 1 },
+    { "id": "quadrant-bottom-left", "label": "Bottom left", "group": "Quadrants", "kind": "grid", "columns": 2, "rows": 2, "columnStart": 0, "columnEnd": 1, "rowStart": 1, "rowEnd": 2 },
+    { "id": "quadrant-bottom-right", "label": "Bottom right", "group": "Quadrants", "kind": "grid", "columns": 2, "rows": 2, "columnStart": 1, "columnEnd": 2, "rowStart": 1, "rowEnd": 2 }
   ]
 }
