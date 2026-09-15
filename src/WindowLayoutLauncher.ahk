@@ -6,6 +6,8 @@ Persistent
 CoordMode "Menu", "Screen"
 
 global CapturedWindow := 0
+global CapturedPid := 0
+global CapturedClass := ""
 global LayoutMenu := BuildLayoutMenu()
 ConfigureTray()
 Hotkey "^#z", OpenLayoutMenu, "On B0 T1"
@@ -51,21 +53,25 @@ BuildLayoutMenu() {
 }
 
 OpenLayoutMenu(*) {
-    global CapturedWindow, LayoutMenu
+    global CapturedWindow, CapturedPid, CapturedClass, LayoutMenu
     hwnd := WinExist("A")
     if !IsEligible(hwnd) {
         TrayTip "Window Layout Launcher", "Select a normal resizable window first."
         return
     }
     CapturedWindow := hwnd
+    CapturedPid := WinGetPID(hwnd)
+    CapturedClass := WinGetClass(hwnd)
     MouseGetPos &x, &y
     LayoutMenu.Show x, y
 }
 
-IsEligible(hwnd) {
+IsEligible(hwnd, expectedPid := 0, expectedClass := "") {
     if !hwnd || !DllCall("IsWindow", "ptr", hwnd, "int") || !WinGetStyle(hwnd) & 0x10000000
         return false
     class := WinGetClass(hwnd)
+    if expectedPid && (WinGetPID(hwnd) != expectedPid || class != expectedClass)
+        return false
     return class != "Progman" && class != "WorkerW" && class != "Shell_TrayWnd"
 }
 
@@ -86,16 +92,16 @@ GetWorkArea(hwnd := 0) {
 }
 
 ApplyExact(width, height, *) {
-    global CapturedWindow
-    if !IsEligible(CapturedWindow)
+    global CapturedWindow, CapturedPid, CapturedClass
+    if !IsEligible(CapturedWindow, CapturedPid, CapturedClass)
         return
     rect := ResolveExactCentered(GetWorkArea(CapturedWindow), width, height)
     WinMove rect.x, rect.y, rect.width, rect.height, CapturedWindow
 }
 
 ApplyGrid(columns, rows, columnStart, columnEnd, rowStart, rowEnd, *) {
-    global CapturedWindow
-    if !IsEligible(CapturedWindow)
+    global CapturedWindow, CapturedPid, CapturedClass
+    if !IsEligible(CapturedWindow, CapturedPid, CapturedClass)
         return
     rect := ResolveGrid(GetWorkArea(CapturedWindow), columns, rows, columnStart, columnEnd, rowStart, rowEnd)
     WinMove rect.x, rect.y, rect.width, rect.height, CapturedWindow
