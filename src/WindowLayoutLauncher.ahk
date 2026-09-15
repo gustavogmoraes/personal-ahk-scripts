@@ -21,6 +21,15 @@ BuildLayoutMenu() {
     halves.Add "Left half", ApplyGrid.Bind(2, 1, 0, 1, 0, 1)
     halves.Add "Right half", ApplyGrid.Bind(2, 1, 1, 2, 0, 1)
     menu.Add "Halves", halves
+    thirds := Menu()
+    thirds.Add "Left third", ApplyGrid.Bind(3, 1, 0, 1, 0, 1)
+    thirds.Add "Center third", ApplyGrid.Bind(3, 1, 1, 2, 0, 1)
+    thirds.Add "Right third", ApplyGrid.Bind(3, 1, 2, 3, 0, 1)
+    menu.Add "Thirds", thirds
+    columns := Menu()
+    loop 4
+        columns.Add "Column " A_Index " of 4", ApplyGrid.Bind(4, 1, A_Index - 1, A_Index, 0, 1)
+    menu.Add "Four columns", columns
     return menu
 }
 
