@@ -18,3 +18,7 @@ ResolveExactCentered(workArea, requestedWidth, requestedHeight) {
         height: height
     }
 }
+
+ResolveCenteredCurrentSize(workArea, currentWidth, currentHeight) {
+    return ResolveExactCentered(workArea, currentWidth, currentHeight)
+}

@@ -21,4 +21,10 @@ AssertEqual(exact.y, 50, "clamped exact y")
 AssertEqual(exact.width, 1600, "clamped exact width")
 AssertEqual(exact.height, 900, "clamped exact height")
 
+centered := ResolveCenteredCurrentSize({left: -1920, top: 0, right: 0, bottom: 1080}, 800, 600)
+AssertEqual(centered.x, -1360, "centered current-size x on negative monitor")
+AssertEqual(centered.y, 240, "centered current-size y")
+AssertEqual(centered.width, 800, "centered current-size width")
+AssertEqual(centered.height, 600, "centered current-size height")
+
 FileAppend "Layout geometry tests passed.`n", "*"

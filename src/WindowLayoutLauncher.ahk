@@ -32,11 +32,15 @@ OpenLayoutSettings(*) {
 
 BuildLayoutMenu() {
     menu := Menu()
+    menu.Add "Fill usable area", ApplyFullWorkArea
+    menu.Add "Center current size", ApplyCenterCurrentSize
+    menu.Add
     exact := Menu()
     exact.Add "1920 × 1080", ApplyExact.Bind(1920, 1080)
     exact.Add "1600 × 900", ApplyExact.Bind(1600, 900)
     exact.Add "1440 × 900", ApplyExact.Bind(1440, 900)
     exact.Add "1280 × 720", ApplyExact.Bind(1280, 720)
+    exact.Add "1024 × 768", ApplyExact.Bind(1024, 768)
     menu.Add "Exact sizes", exact
     halves := Menu()
     halves.Add "Left half", ApplyGrid.Bind(2, 1, 0, 1, 0, 1)
@@ -77,7 +81,10 @@ OpenLayoutMenu(*) {
 }
 
 IsEligible(hwnd, expectedPid := 0, expectedClass := "") {
-    if !hwnd || !DllCall("IsWindow", "ptr", hwnd, "int") || (WinGetStyle(hwnd) & 0x10000000) = 0
+    if !hwnd || !DllCall("IsWindow", "ptr", hwnd, "int")
+        return false
+    style := WinGetStyle(hwnd)
+    if (style & 0x10000000) = 0 || (style & 0x40000000) != 0
         return false
     class := WinGetClass(hwnd)
     if expectedPid && (WinGetPID(hwnd) != expectedPid || class != expectedClass)
@@ -87,15 +94,16 @@ IsEligible(hwnd, expectedPid := 0, expectedClass := "") {
 
 GetWorkArea(hwnd := 0) {
     if hwnd {
-        WinGetPos &x, &y, &width, &height, hwnd
-        centerX := x + width // 2
-        centerY := y + height // 2
-        monitorCount := MonitorGetCount()
-        loop monitorCount {
-            MonitorGetWorkArea A_Index, &left, &top, &right, &bottom
-            if centerX >= left && centerX < right && centerY >= top && centerY < bottom
-                return {left: left, top: top, right: right, bottom: bottom}
-        }
+        monitor := DllCall("MonitorFromWindow", "ptr", hwnd, "uint", 2, "ptr")
+        monitorInfo := Buffer(40, 0)
+        NumPut "uint", 40, monitorInfo, 0
+        if monitor && DllCall("GetMonitorInfoW", "ptr", monitor, "ptr", monitorInfo.Ptr, "int")
+            return {
+                left: NumGet(monitorInfo, 20, "int"),
+                top: NumGet(monitorInfo, 24, "int"),
+                right: NumGet(monitorInfo, 28, "int"),
+                bottom: NumGet(monitorInfo, 32, "int")
+            }
     }
     MonitorGetWorkArea 1, &left, &top, &right, &bottom
     return {left: left, top: top, right: right, bottom: bottom}
@@ -111,12 +119,35 @@ ApplyExact(width, height, *) {
     WinMove rect.x, rect.y, rect.width, rect.height, CapturedWindow
 }
 
+ApplyFullWorkArea(*) {
+    global CapturedWindow, CapturedPid, CapturedClass
+    if !IsEligible(CapturedWindow, CapturedPid, CapturedClass)
+        return
+    rect := GetWorkArea(CapturedWindow)
+    RestoreBeforeMove(CapturedWindow)
+    WinMove rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, CapturedWindow
+}
+
+ApplyCenterCurrentSize(*) {
+    global CapturedWindow, CapturedPid, CapturedClass
+    if !IsEligible(CapturedWindow, CapturedPid, CapturedClass)
+        return
+    WinGetPos ,, &width, &height, CapturedWindow
+    rect := ResolveCenteredCurrentSize(GetWorkArea(CapturedWindow), width, height)
+    RestoreBeforeMove(CapturedWindow)
+    WinMove rect.x, rect.y, rect.width, rect.height, CapturedWindow
+}
+
 ApplyGrid(columns, rows, columnStart, columnEnd, rowStart, rowEnd, *) {
     global CapturedWindow, CapturedPid, CapturedClass
     if !IsEligible(CapturedWindow, CapturedPid, CapturedClass)
         return
     rect := ResolveGrid(GetWorkArea(CapturedWindow), columns, rows, columnStart, columnEnd, rowStart, rowEnd)
-    if WinGetMinMax(CapturedWindow) = 1
-        WinRestore CapturedWindow
+    RestoreBeforeMove(CapturedWindow)
     WinMove rect.x, rect.y, rect.width, rect.height, CapturedWindow
+}
+
+RestoreBeforeMove(hwnd) {
+    if WinGetMinMax(hwnd) = 1
+        WinRestore hwnd
 }
