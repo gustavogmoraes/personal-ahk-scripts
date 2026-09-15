@@ -29,6 +29,8 @@ BuildLayoutMenu() {
     halves := Menu()
     halves.Add "Left half", ApplyGrid.Bind(2, 1, 0, 1, 0, 1)
     halves.Add "Right half", ApplyGrid.Bind(2, 1, 1, 2, 0, 1)
+    halves.Add "Top half", ApplyGrid.Bind(1, 2, 0, 1, 0, 1)
+    halves.Add "Bottom half", ApplyGrid.Bind(1, 2, 0, 1, 1, 2)
     menu.Add "Halves", halves
     thirds := Menu()
     thirds.Add "Left third", ApplyGrid.Bind(3, 1, 0, 1, 0, 1)
@@ -39,6 +41,12 @@ BuildLayoutMenu() {
     loop 4
         columns.Add "Column " A_Index " of 4", ApplyGrid.Bind(4, 1, A_Index - 1, A_Index, 0, 1)
     menu.Add "Four columns", columns
+    quadrants := Menu()
+    quadrants.Add "Top left", ApplyGrid.Bind(2, 2, 0, 1, 0, 1)
+    quadrants.Add "Top right", ApplyGrid.Bind(2, 2, 1, 2, 0, 1)
+    quadrants.Add "Bottom left", ApplyGrid.Bind(2, 2, 0, 1, 1, 2)
+    quadrants.Add "Bottom right", ApplyGrid.Bind(2, 2, 1, 2, 1, 2)
+    menu.Add "Quadrants", quadrants
     return menu
 }
 
