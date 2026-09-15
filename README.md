@@ -12,7 +12,7 @@ DLL or installing per-layout global shortcuts.
 Run the launcher with:
 
 ```powershell
-& "$env:LOCALAPPDATA\Programs\AutoHotkey\v2\AutoHotkey64.exe" .\src\WindowLayoutLauncher.ahk
+.\Run-WindowLayoutLauncher.ps1
 ```
 
 Run geometry tests with:
