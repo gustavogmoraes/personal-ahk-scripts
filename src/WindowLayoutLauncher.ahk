@@ -7,7 +7,16 @@ CoordMode "Menu", "Screen"
 
 global CapturedWindow := 0
 global LayoutMenu := BuildLayoutMenu()
+ConfigureTray()
 Hotkey "^#z", OpenLayoutMenu, "On B0 T1"
+
+ConfigureTray() {
+    A_TrayMenu.Delete()
+    A_TrayMenu.Add "Open layout menu", OpenLayoutMenu
+    A_TrayMenu.Add
+    A_TrayMenu.Add "Exit", (*) => ExitApp()
+    A_IconTip := "Window Layout Launcher"
+}
 
 BuildLayoutMenu() {
     menu := Menu()
