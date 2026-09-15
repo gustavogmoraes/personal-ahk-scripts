@@ -15,9 +15,19 @@ Hotkey "^#z", OpenLayoutMenu, "On B0 T1"
 ConfigureTray() {
     A_TrayMenu.Delete()
     A_TrayMenu.Add "Open layout menu", OpenLayoutMenu
+    A_TrayMenu.Add "Edit layouts...", OpenLayoutSettings
     A_TrayMenu.Add
     A_TrayMenu.Add "Exit", (*) => ExitApp()
     A_IconTip := "Window Layout Launcher"
+}
+
+OpenLayoutSettings(*) {
+    configPath := A_AppData "\PersonalAhkScripts\WindowLayoutLauncher\layouts.json"
+    configDirectory := RegExReplace(configPath, "\\[^\\]+$")
+    DirCreate configDirectory
+    if !FileExist(configPath)
+        FileCopy A_ScriptDir "\..\defaults\layouts.json", configPath
+    Run 'notepad.exe "' configPath '"'
 }
 
 BuildLayoutMenu() {
