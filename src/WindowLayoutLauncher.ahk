@@ -96,9 +96,15 @@ SetExactAnchor(anchorId, *) {
         if (choice.id = anchorId) {
             ExactAnchor := anchorId
             RefreshAnchorChecks()
+            SetTimer ShowExactPlaceMenu, -1
             return
         }
     }
+}
+
+ShowExactPlaceMenu() {
+    global ExactPlaceMenu
+    ExactPlaceMenu.Show()
 }
 
 RefreshAnchorChecks() {
