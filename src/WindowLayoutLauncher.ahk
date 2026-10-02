@@ -8,6 +8,8 @@ CoordMode "Menu", "Screen"
 global CapturedWindow := 0
 global CapturedPid := 0
 global CapturedClass := ""
+global ExactAnchor := "center"
+global ExactPlaceMenu := Menu()
 global LayoutMenu := BuildLayoutMenu()
 ConfigureTray()
 Hotkey "^#z", OpenLayoutMenu, "On B0 T1"
@@ -31,39 +33,82 @@ OpenLayoutSettings(*) {
 }
 
 BuildLayoutMenu() {
-    menu := Menu()
-    menu.Add "Fill usable area", ApplyFullWorkArea
-    menu.Add "Center current size", ApplyCenterCurrentSize
-    menu.Add
+    rootMenu := Menu()
+    rootMenu.Add "Fill usable area", ApplyFullWorkArea
+    rootMenu.Add "Center current size", ApplyCenterCurrentSize
+    rootMenu.Add
     exact := Menu()
     exact.Add "1920 × 1080", ApplyExact.Bind(1920, 1080)
     exact.Add "1600 × 900", ApplyExact.Bind(1600, 900)
     exact.Add "1440 × 900", ApplyExact.Bind(1440, 900)
     exact.Add "1280 × 720", ApplyExact.Bind(1280, 720)
     exact.Add "1024 × 768", ApplyExact.Bind(1024, 768)
-    menu.Add "Exact sizes", exact
+    exact.Add
+    exact.Add "Place at", (*) => 0
+    exact.Disable "Place at"
+    global ExactPlaceMenu := exact
+    for choice in GetExactAnchors()
+        exact.Add choice.label, SetExactAnchor.Bind(choice.id)
+    RefreshAnchorChecks()
+    rootMenu.Add "Exact sizes", exact
     halves := Menu()
     halves.Add "Left half", ApplyGrid.Bind(2, 1, 0, 1, 0, 1)
     halves.Add "Right half", ApplyGrid.Bind(2, 1, 1, 2, 0, 1)
     halves.Add "Top half", ApplyGrid.Bind(1, 2, 0, 1, 0, 1)
     halves.Add "Bottom half", ApplyGrid.Bind(1, 2, 0, 1, 1, 2)
-    menu.Add "Halves", halves
+    rootMenu.Add "Halves", halves
     thirds := Menu()
     thirds.Add "Left third", ApplyGrid.Bind(3, 1, 0, 1, 0, 1)
     thirds.Add "Center third", ApplyGrid.Bind(3, 1, 1, 2, 0, 1)
     thirds.Add "Right third", ApplyGrid.Bind(3, 1, 2, 3, 0, 1)
-    menu.Add "Thirds", thirds
+    rootMenu.Add "Thirds", thirds
     columns := Menu()
     loop 4
         columns.Add "Column " A_Index " of 4", ApplyGrid.Bind(4, 1, A_Index - 1, A_Index, 0, 1)
-    menu.Add "Four columns", columns
+    rootMenu.Add "Four columns", columns
     quadrants := Menu()
     quadrants.Add "Top left", ApplyGrid.Bind(2, 2, 0, 1, 0, 1)
     quadrants.Add "Top right", ApplyGrid.Bind(2, 2, 1, 2, 0, 1)
     quadrants.Add "Bottom left", ApplyGrid.Bind(2, 2, 0, 1, 1, 2)
     quadrants.Add "Bottom right", ApplyGrid.Bind(2, 2, 1, 2, 1, 2)
-    menu.Add "Quadrants", quadrants
-    return menu
+    rootMenu.Add "Quadrants", quadrants
+    return rootMenu
+}
+
+GetExactAnchors() {
+    return [
+        {id: "keep", label: "Keep position"},
+        {id: "center", label: "Center"},
+        {id: "left", label: "Left"},
+        {id: "right", label: "Right"},
+        {id: "top", label: "Top"},
+        {id: "bottom", label: "Bottom"},
+        {id: "top-left", label: "Top left"},
+        {id: "top-right", label: "Top right"},
+        {id: "bottom-left", label: "Bottom left"},
+        {id: "bottom-right", label: "Bottom right"}
+    ]
+}
+
+SetExactAnchor(anchorId, *) {
+    global ExactAnchor
+    for choice in GetExactAnchors() {
+        if (choice.id = anchorId) {
+            ExactAnchor := anchorId
+            RefreshAnchorChecks()
+            return
+        }
+    }
+}
+
+RefreshAnchorChecks() {
+    global ExactPlaceMenu, ExactAnchor
+    for choice in GetExactAnchors() {
+        if (choice.id = ExactAnchor)
+            ExactPlaceMenu.Check choice.label
+        else
+            ExactPlaceMenu.Uncheck choice.label
+    }
 }
 
 OpenLayoutMenu(*) {
@@ -113,9 +158,10 @@ ApplyExact(width, height, *) {
     global CapturedWindow, CapturedPid, CapturedClass
     if !IsEligible(CapturedWindow, CapturedPid, CapturedClass)
         return
-    rect := ResolveExactCentered(GetWorkArea(CapturedWindow), width, height)
-    if WinGetMinMax(CapturedWindow) = 1
-        WinRestore CapturedWindow
+    global ExactAnchor
+    RestoreBeforeMove(CapturedWindow)
+    WinGetPos &currentX, &currentY,,, CapturedWindow
+    rect := ResolveExactPlaced(GetWorkArea(CapturedWindow), width, height, ExactAnchor, currentX, currentY)
     WinMove rect.x, rect.y, rect.width, rect.height, CapturedWindow
 }
 

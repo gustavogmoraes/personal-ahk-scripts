@@ -21,7 +21,29 @@ AssertEqual(exact.y, 50, "clamped exact y")
 AssertEqual(exact.width, 1600, "clamped exact width")
 AssertEqual(exact.height, 900, "clamped exact height")
 
-centered := ResolveCenteredCurrentSize({left: -1920, top: 0, right: 0, bottom: 1080}, 800, 600)
+area := {left: -1920, top: 0, right: 0, bottom: 1080}
+kept := ResolveExactPlaced(area, 800, 600, "keep", -100, -40)
+AssertEqual(kept.x, -800, "keep clamps to the right edge")
+AssertEqual(kept.y, 0, "keep clamps to the top edge")
+AssertEqual(kept.width, 800, "keep width")
+
+leftSide := ResolveExactPlaced(area, 800, 600, "left")
+AssertEqual(leftSide.x, -1920, "left x")
+AssertEqual(leftSide.y, 240, "left y")
+
+topLeft := ResolveExactPlaced(area, 800, 600, "top-left")
+AssertEqual(topLeft.x, -1920, "top-left x")
+AssertEqual(topLeft.y, 0, "top-left y")
+
+topRight := ResolveExactPlaced(area, 800, 600, "top-right")
+AssertEqual(topRight.x, -800, "top-right x")
+AssertEqual(topRight.y, 0, "top-right y")
+
+bottom := ResolveExactPlaced(area, 800, 600, "bottom")
+AssertEqual(bottom.x, -1360, "bottom x")
+AssertEqual(bottom.y, 480, "bottom y")
+
+centered := ResolveCenteredCurrentSize(area, 800, 600)
 AssertEqual(centered.x, -1360, "centered current-size x on negative monitor")
 AssertEqual(centered.y, 240, "centered current-size y")
 AssertEqual(centered.width, 800, "centered current-size width")

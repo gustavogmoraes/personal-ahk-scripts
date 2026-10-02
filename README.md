@@ -7,7 +7,9 @@ Open-source, source-first AutoHotkey v2 utilities for this Windows desktop.
 The first utility is a safe Sizer-style layout launcher. Press `Ctrl + Win + Z`
 to open one popup menu for the window that was active at that moment. It will
 offer exact outer-window sizes and monitor-relative layouts without injecting a
-DLL or installing per-layout global shortcuts.
+DLL or installing per-layout global shortcuts. Under Exact sizes, Place at
+chooses where the next exact size lands. Center is the default. Choosing a
+place does not move a window.
 
 Run the launcher with:
 
