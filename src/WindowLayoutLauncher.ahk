@@ -1,6 +1,7 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 #Include LayoutGeometry.ahk
+#Include LayoutConfig.ahk
 
 Persistent
 CoordMode "Menu", "Screen"
@@ -10,14 +11,28 @@ global CapturedPid := 0
 global CapturedClass := ""
 global ExactAnchor := "center"
 global ExactPlaceMenu := Menu()
+global CapturedWidth := 0
+global CapturedHeight := 0
+global CapturedMaximized := false
+global CustomExactSizes := []
+global ConfigWarnKey := ""
 global LayoutMenu := BuildLayoutMenu()
-ConfigureTray()
 Hotkey "^#z", OpenLayoutMenu, "On B0 T1"
 
 ConfigureTray() {
+    global CustomExactSizes
     A_TrayMenu.Delete()
     A_TrayMenu.Add "Open layout menu", OpenLayoutMenu
     A_TrayMenu.Add "Edit layouts...", OpenLayoutSettings
+    deleteMenu := Menu()
+    if (CustomExactSizes.Length = 0) {
+        deleteMenu.Add "(none)", (*) => 0
+        deleteMenu.Disable "(none)"
+    } else {
+        for item in CustomExactSizes
+            deleteMenu.Add item.label " (" item.width " × " item.height ")", DeleteCustomExactSize.Bind(item.id, item.label)
+    }
+    A_TrayMenu.Add "Delete custom size", deleteMenu
     A_TrayMenu.Add
     A_TrayMenu.Add "Exit", (*) => ExitApp()
     A_IconTip := "Window Layout Launcher"
@@ -37,12 +52,19 @@ BuildLayoutMenu() {
     rootMenu.Add "Fill usable area", ApplyFullWorkArea
     rootMenu.Add "Center current size", ApplyCenterCurrentSize
     rootMenu.Add
+    LoadCustomSizes()
     exact := Menu()
+    exact.Add(CurrentSizeLabel(), (*) => 0)
+    exact.Disable(CurrentSizeLabel())
+    exact.Add
     exact.Add "1920 × 1080", ApplyExact.Bind(1920, 1080)
     exact.Add "1600 × 900", ApplyExact.Bind(1600, 900)
     exact.Add "1440 × 900", ApplyExact.Bind(1440, 900)
     exact.Add "1280 × 720", ApplyExact.Bind(1280, 720)
     exact.Add "1024 × 768", ApplyExact.Bind(1024, 768)
+    for item in CustomExactSizes
+        AddExactItem(exact, item.label, ApplyExact.Bind(item.width, item.height))
+    exact.Add "Save current size...", SaveCurrentSize
     exact.Add
     exact.Add "Place at", (*) => 0
     exact.Disable "Place at"
@@ -72,7 +94,105 @@ BuildLayoutMenu() {
     quadrants.Add "Bottom left", ApplyGrid.Bind(2, 2, 0, 1, 1, 2)
     quadrants.Add "Bottom right", ApplyGrid.Bind(2, 2, 1, 2, 1, 2)
     rootMenu.Add "Quadrants", quadrants
+    ConfigureTray()
     return rootMenu
+}
+
+CurrentSizeLabel() {
+    global CapturedWidth, CapturedHeight, CapturedMaximized
+    if (CapturedWidth < 1 || CapturedHeight < 1)
+        return "Current: —"
+    label := "Current: " CapturedWidth " × " CapturedHeight
+    if CapturedMaximized
+        label .= " (maximized)"
+    return label
+}
+
+LoadCustomSizes() {
+    global CustomExactSizes, ConfigWarnKey
+    loaded := LoadLayoutFile(LayoutConfigPath())
+    if !loaded.ok {
+        CustomExactSizes := []
+        stamp := LayoutConfigPath()
+        try stamp .= "|" FileGetTime(LayoutConfigPath(), "M")
+        if (stamp != ConfigWarnKey) {
+            ConfigWarnKey := stamp
+            MsgBox loaded.error, "Window Layout Launcher", "Icon!"
+        }
+        return
+    }
+    ConfigWarnKey := ""
+    CustomExactSizes := CustomExactLayouts(loaded.data)
+}
+
+AddExactItem(exactMenu, label, callback) {
+    candidate := label
+    suffix := 2
+    loop {
+        try {
+            exactMenu.Add candidate, callback
+            return
+        }
+        candidate := label " (" suffix ")"
+        suffix++
+    }
+}
+
+SaveCurrentSize(*) {
+    global CapturedWidth, CapturedHeight, CapturedMaximized, CustomExactSizes
+    if (CapturedWidth < 1 || CapturedHeight < 1) {
+        MsgBox "The captured window has no size to save.", "Window Layout Launcher", "Icon!"
+        return
+    }
+    prompt := "Save " CapturedWidth " × " CapturedHeight
+    if CapturedMaximized
+        prompt .= " (maximized)"
+    asked := InputBox(prompt " as:", "Save current size", "w360")
+    if (asked.Result != "OK")
+        return
+    name := Trim(asked.Value)
+    if (name = "")
+        return
+    if IsReservedSizeLabel(name) {
+        MsgBox "That name is already used.", "Window Layout Launcher", "Icon!"
+        return
+    }
+    saved := SaveCustomExact(LayoutConfigPath(), LayoutDefaultsPath(), name, CapturedWidth, CapturedHeight)
+    if (saved != "") {
+        MsgBox saved, "Window Layout Launcher", "Icon!"
+        return
+    }
+    global LayoutMenu := BuildLayoutMenu()
+}
+
+DeleteCustomExactSize(id, label, *) {
+    answer := MsgBox("Delete " label "?", "Window Layout Launcher", "YesNo Icon!")
+    if (answer != "Yes")
+        return
+    removed := DeleteCustomExact(LayoutConfigPath(), id)
+    if (removed != "") {
+        MsgBox removed, "Window Layout Launcher", "Icon!"
+        return
+    }
+    global LayoutMenu := BuildLayoutMenu()
+}
+
+IsReservedSizeLabel(name) {
+    global CustomExactSizes
+    if (SubStr(name, 1, 8) = "Current:")
+        return true
+    if (name = "Place at" || name = "Save current size...")
+        return true
+    for builtin in ["1920 × 1080", "1600 × 900", "1440 × 900", "1280 × 720", "1024 × 768"]
+        if (builtin = name)
+            return true
+    for choice in GetExactAnchors()
+        if (choice.label = name)
+            return true
+    for item in CustomExactSizes
+        if (item.label = name)
+            return true
+    return false
 }
 
 GetExactAnchors() {
@@ -127,6 +247,11 @@ OpenLayoutMenu(*) {
     CapturedWindow := hwnd
     CapturedPid := WinGetPID(hwnd)
     CapturedClass := WinGetClass(hwnd)
+    WinGetPos ,,, &width, &height, hwnd
+    global CapturedWidth := width
+    global CapturedHeight := height
+    global CapturedMaximized := WinGetMinMax(hwnd) = 1
+    global LayoutMenu := BuildLayoutMenu()
     MouseGetPos &x, &y
     LayoutMenu.Show x, y
 }
